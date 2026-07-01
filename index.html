@@ -684,7 +684,10 @@ function render() {
     const tr = document.createElement('tr');
     const title = ev.title || ev.viewableRef || '(no title)';
     const stream = ev.streamUrl || '—';
-    const consoleHref = consoleAssetUrl(ev.id);
+    // The console's asset edit URL is keyed by the viewable id (= asset id),
+    // not the playable id, so prefer viewableId / viewableRef over ev.id.
+    const viewableId = ev.viewableId || ev.viewableRef || ev.id;
+    const consoleHref = consoleAssetUrl(viewableId);
     const openInConsole = consoleHref
       ? `<a class="link small" href="${escapeHtml(consoleHref)}" target="_blank" rel="noopener noreferrer" title="Open asset in Leyra console">Open</a>`
       : '';
