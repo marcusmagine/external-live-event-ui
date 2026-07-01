@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>External Live Events</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
+  :root {
+    /* Leyra design tokens (from CMS) */
+    --primary-500: #FFCE2D;
+    --primary-400: #FFD857;
+    --primary-100: #FFF5D5;
+    --green: #1E9C5B;
+    --red: #BB384A;
+    --leyra-btn-bg: #16A073;
+    --leyra-btn-hover-bg: #5BBD9D;
+    --leyra-btn-active-bg: #149068;
+    --leyra-grey: #969595;
+    --neutral-900: #212121;
+    --neutral-800: #3E3E3E;
+    --neutral-700: #5C5C5C;
+    --neutral-600: #797979;
+    --neutral-500: #979797;
+    --neutral-400: #ACACAC;
+    --neutral-300: #C0C0C0;
+    --neutral-200: #D5D5D5;
+    --neutral-100: #EAEAEA;
+    --bs-border-color: #D9D9D9;
+    --bs-border-radius: .375rem;
+
+    /* App mapping */
+    --bg: #ffffff;
+    --canvas: #f4f5f7;
+    --sidebar: #1c1c1e;
+    --sidebar-muted: #8a8a8f;
+    --sidebar-hover: #2a2a2d;
+    --panel: #ffffff;
+    --panel-2: #f7f8fa;
+    --border: #e4e6ea;
+    --border-strong: #d3d6db;
+    --text: var(--neutral-900);
+    --muted: var(--neutral-600);
+    --accent: #1c1c1e;
+    --accent-hover: #333336;
+    --btn-bg: var(--leyra-btn-bg);
+    --btn-hover: var(--leyra-btn-hover-bg);
+    --btn-active: var(--leyra-btn-active-bg);
+    --danger: var(--red);
+    --danger-hover: #a52f3f;
+    --ok: var(--green);
+    --warn: #c9902a;
+    --deleted: #c9902a;
+    --focus: var(--leyra-btn-bg);
+    --font-base: ProximaNova-Regular, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: var(--font-base);
+    background: var(--canvas);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .layout { display: flex; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar {
+    width: 216px;
+    background: var(--sidebar);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 18px 0;
+  }
+  .sidebar .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px 22px;
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+  }
+  .sidebar .brand .mark {
+    width: 22px; height: 22px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--primary-500);
+  }
+  .sidebar .nav-group { padding: 0 10px; }
+  .sidebar .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px;
+    border-radius: var(--bs-border-radius);
+    color: var(--sidebar-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: default;
+    user-select: none;
+  }
+  .sidebar .nav-item.active { background: var(--sidebar-hover); color: #fff; }
+  .sidebar .nav-item .ico { width: 16px; height: 16px; opacity: 0.9; }
+  .sidebar .nav-sub {
+    padding: 6px 12px 6px 38px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    cursor: default;
+    position: relative;
+  }
+  .sidebar .nav-sub.current { color: var(--primary-500); }
+  .sidebar .nav-sub.current::before {
+    content: "";
+    position: absolute;
+    left: 24px; top: 50%;
+    transform: translateY(-50%);
+    width: 3px; height: 18px;
+    background: var(--primary-500);
+    border-radius: 2px;
+  }
+
+  /* Main column */
+  .main-col { flex: 1; display: flex; flex-direction: column; min-width: 0; background: var(--canvas); }
+
+  .topbar {
+    height: 56px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+  }
+  .topbar .search {
+    flex: 1;
+    max-width: 520px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: var(--bs-border-radius);
+    padding: 8px 12px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .topbar .partner { margin-left: auto; color: var(--muted); font-size: 13px; display: flex; align-items: center; gap: 10px; }
+  .topbar .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--leyra-btn-bg); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+  }
+
+  .breadcrumb {
+    padding: 20px 28px 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .breadcrumb a { color: var(--text); font-weight: 600; text-decoration: none; }
+  .breadcrumb .sep { margin: 0 8px; color: var(--border-strong); }
+
+  .page-head {
+    padding: 8px 28px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .page-head h1 { margin: 0 0 4px; font-size: 22px; font-weight: 700; }
+  .page-head .env { color: var(--muted); font-size: 13px; font-weight: 400; }
+  .page-head .actions { display: flex; gap: 8px; align-items: center; }
+
+  main { padding: 0 28px 40px; }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+
+  .config summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--text);
+    user-select: none;
+  }
+  .config[open] summary { margin-bottom: 14px; }
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 160px auto;
+    gap: 12px;
+    align-items: end;
+  }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 5px; font-weight: 500; }
+  input, select, textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border-strong);
+    color: var(--text);
+    border-radius: var(--bs-border-radius);
+    padding: 9px 11px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+  input::placeholder, textarea::placeholder { color: #aab0b8; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px rgba(22,160,115,0.15); }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .btn {
+    background: var(--btn-bg);
+    color: #fff;
+    border: none;
+    border-radius: var(--bs-border-radius);
+    padding: 9px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--btn-hover); }
+  .btn:active { background: var(--btn-active); }
+  .btn.dark { background: var(--accent); }
+  .btn.dark:hover { background: var(--accent-hover); }
+  .btn.secondary { background: var(--bg); border: 1px solid var(--border-strong); color: var(--text); }
+  .btn.secondary:hover { background: var(--panel-2); }
+  .btn.danger { background: var(--danger); }
+  .btn.danger:hover { background: var(--danger-hover); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.small { padding: 6px 12px; font-size: 12px; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    text-align: left;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  th { background: var(--bg); color: var(--muted); font-weight: 600; font-size: 12px; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: var(--panel-2); }
+  td.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
+  td .id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; color: var(--muted); }
+
+  .badge {
+    display: inline-block;
+    padding: 3px 9px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.ready { background: rgba(30,156,91,0.12); color: var(--ok); }
+  .badge.deleted { background: rgba(201,144,42,0.14); color: var(--deleted); }
+  .badge.external { background: var(--panel-2); color: var(--muted); border: 1px solid var(--border); }
+
+  .empty { text-align: center; color: var(--muted); padding: 48px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; }
+  .error { color: var(--danger); font-size: 13px; margin: 8px 0; }
+  .hint { color: var(--muted); font-size: 12px; }
+
+  /* Modal */
+  .overlay {
+    position: fixed; inset: 0;
+    background: rgba(28,28,30,0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 20px;
+  }
+  .overlay.show { display: flex; }
+  .modal {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow: auto;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+  }
+  .modal h2 { margin: 0 0 18px; font-size: 18px; font-weight: 700; }
+  .modal .field { margin-bottom: 16px; }
+  .modal .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .modal footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--border); }
+  .modal .sub { color: var(--muted); font-size: 12px; margin-top: 4px; }
+
+  .toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .toggle input { width: auto; accent-color: var(--btn-bg); }
+  .toggle label { margin: 0; color: var(--text); font-weight: 500; }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--sidebar);
+    border: 1px solid var(--sidebar);
+    color: #fff;
+    padding: 11px 18px;
+    border-radius: 10px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+    pointer-events: none;
+    font-weight: 500;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { background: var(--danger); border-color: var(--danger); }
+  .toast.ok { background: var(--btn-bg); border-color: var(--btn-bg); }
+
+  @media (max-width: 820px) {
+    .sidebar { display: none; }
+    .config-grid { grid-template-columns: 1fr; }
+    .modal .row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 3v18h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      LEYRA
+    </div>
+    <div class="nav-group">
+      <div class="nav-item">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 19V5m0 14h16M8 15l3-4 3 3 4-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Analytics
+      </div>
+      <div class="nav-item active">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Content
+      </div>
+      <div class="nav-sub current">Live events</div>
+      <div class="nav-item">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M3 7h18v11H3zM3 10h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Commercial
+      </div>
+      <div class="nav-item">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Users
+      </div>
+      <div class="nav-item">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="2"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        Configs
+      </div>
+      <div class="nav-item">
+        <svg class="ico" viewBox="0 0 24 24" fill="none"><path d="M9 8l-4 4 4 4M15 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Developer
+      </div>
+    </div>
+  </aside>
+
+  <div class="main-col">
+    <div class="topbar">
+      <div class="search">Help &amp; Solutions</div>
+      <div class="partner">
+        <span id="partnerLabel">Partner</span>
+        <span class="avatar" id="avatar">MA</span>
+      </div>
+    </div>
+
+    <div class="breadcrumb">
+      <a href="#">Console</a><span class="sep">/</span><a href="#">Content</a><span class="sep">/</span>Live events
+    </div>
+
+    <div class="page-head">
+      <div>
+        <h1>External Live Events</h1>
+        <div class="env" id="envLabel"></div>
+      </div>
+      <div class="actions">
+        <button class="btn secondary small" id="refreshBtn">Refresh</button>
+        <button class="btn small" id="newBtn">+ Create New</button>
+      </div>
+    </div>
+
+<main>
+  <div class="card" style="margin-bottom:20px; padding:18px;">
+    <details class="config" id="configDetails" style="padding:0; border:none; margin:0;">
+      <summary>API Configuration</summary>
+      <div class="config-grid">
+        <div>
+          <label>Function URL</label>
+          <input id="cfgUrl" placeholder="https://xxxx.lambda-url.eu-west-1.on.aws/">
+        </div>
+        <div>
+          <label>API Key</label>
+          <input id="cfgKey" type="password" placeholder="X-Api-Key value">
+        </div>
+        <div>
+          <label>Partner ID</label>
+          <input id="cfgPartner" placeholder="magine">
+        </div>
+        <div>
+          <button class="btn dark" id="saveCfgBtn">Save Config</button>
+        </div>
+      </div>
+      <p class="hint" style="margin-top:10px;">Stored locally in your browser (localStorage). Not sent anywhere except the configured API.</p>
+    </details>
+  </div>
+
+  <div class="error" id="err"></div>
+
+  <table id="eventsTable" style="display:none;">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Asset ID</th>
+        <th>Start time</th>
+        <th>Stream URL</th>
+        <th>Status</th>
+        <th style="width:1%;">Type</th>
+        <th style="width:1%;"></th>
+      </tr>
+    </thead>
+    <tbody id="eventsBody"></tbody>
+  </table>
+  <div class="empty" id="emptyState" style="display:none;">No events yet. Click “+ Create New” to create one.</div>
+</main>
+  </div>
+</div>
+
+<!-- Create / Edit modal -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h2 id="modalTitle">New external live event</h2>
+    <div class="field">
+      <label>Title</label>
+      <input id="fTitle" placeholder="Championship Final">
+    </div>
+    <div class="row">
+      <div class="field">
+        <label>Start time</label>
+        <input id="fStart" type="datetime-local">
+        <div class="sub">Stored as unix seconds.</div>
+      </div>
+      <div class="field">
+        <label>Stream URL</label>
+        <input id="fUrl" placeholder="https://cdn.example.com/live/index.m3u8">
+      </div>
+    </div>
+    <div class="toggle">
+      <input type="checkbox" id="fSignEnabled">
+      <label for="fSignEnabled">CDN77 URL signing</label>
+    </div>
+    <div class="row" id="signFields" style="display:none;">
+      <div class="field">
+        <label>Signing token</label>
+        <div style="display:flex; gap:6px;">
+          <input id="fToken" type="text" placeholder="CDN77 token">
+          <button class="btn secondary small" id="toggleTokenBtn" type="button" style="white-space:nowrap;">Hide</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Expiry (seconds)</label>
+        <input id="fExpiry" type="number" value="7200">
+      </div>
+    </div>
+    <div class="field" id="idField" style="display:none;">
+      <label>Asset ID (playable)</label>
+      <input id="fId" readonly>
+    </div>
+    <footer>
+      <button class="btn secondary" id="cancelBtn">Cancel</button>
+      <button class="btn danger" id="archiveBtn" style="display:none;">Archive</button>
+      <button class="btn" id="submitBtn">Create</button>
+    </footer>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const cfg = {
+  url: localStorage.getItem('ele_url') || '',
+  key: localStorage.getItem('ele_key') || '',
+  partner: localStorage.getItem('ele_partner') || '',
+};
+
+function syncConfigInputs() {
+  $('cfgUrl').value = cfg.url;
+  $('cfgKey').value = cfg.key;
+  $('cfgPartner').value = cfg.partner;
+  $('envLabel').textContent = cfg.url ? deriveEnvLabel(cfg.url) : 'Not Configured';
+  $('partnerLabel').textContent = cfg.partner ? cfg.partner : 'Select Partner';
+  $('avatar').textContent = (cfg.partner ? cfg.partner.slice(0, 2) : '?').toUpperCase();
+}
+function deriveEnvLabel(url) {
+  if (/devel/.test(url) || /tvoli-devel/.test(url)) return 'Environment: devel';
+  if (/test/.test(url) || /tvoli\.com/.test(url)) return 'Environment: test';
+  if (/prod/.test(url) || /magine\.com/.test(url)) return 'Environment: prod';
+  return '';
+}
+function isConfigured() { return cfg.url && cfg.key && cfg.partner; }
+function maybeOpenConfig() {
+  if (!isConfigured()) $('configDetails').open = true;
+}
+
+function toast(msg, kind) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (kind || '');
+  setTimeout(() => t.className = 'toast', 2200);
+}
+function showError(msg) { $('err').textContent = msg || ''; }
+
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'X-Api-Key': cfg.key,
+      'Magine-PartnerId': cfg.partner,
+    },
+  };
+  if (body) {
+    opts.headers['Content-Type'] = 'application/json';
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(cfg.url.replace(/\/$/, '') + path, opts);
+  let data = null;
+  const text = await res.text();
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+  if (!res.ok) {
+    const detail = data && data.error ? data.error : (typeof data === 'string' ? data : res.statusText);
+    const err = new Error(`${res.status} ${detail}`);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function fmtTime(unix) {
+  if (!unix) return '—';
+  const d = new Date(unix * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function toLocalDatetimeInput(unix) {
+  const d = new Date(unix * 1000);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fromDatetimeInput(value) {
+  return Math.floor(new Date(value).getTime() / 1000);
+}
+function statusBadge(ev) {
+  const archived = ev.archived;
+  return archived
+    ? '<span class="badge deleted">deleted</span>'
+    : '<span class="badge ready">ready</span>';
+}
+
+let events = [];
+
+async function loadEvents() {
+  if (!isConfigured()) { maybeOpenConfig(); return; }
+  showError('');
+  try {
+    const list = await api('GET', '/events?partner=' + encodeURIComponent(cfg.partner));
+    events = Array.isArray(list) ? list : [];
+    render();
+    await enrichEvents();
+  } catch (e) {
+    showError('Failed to load events: ' + e.message);
+    events = [];
+    render();
+  }
+}
+
+async function enrichEvents() {
+  const CONCURRENCY = 4;
+  const queue = events.slice();
+  async function worker() {
+    while (queue.length) {
+      const ev = queue.shift();
+      if (!ev || ev._enriched) continue;
+      try {
+        const detail = await api('GET', '/events/' + encodeURIComponent(ev.id) + '?partner=' + encodeURIComponent(cfg.partner));
+        if (detail) {
+          ev.title = detail.title;
+          ev.streamUrl = detail.streamUrl;
+          ev.urlSigning = detail.urlSigning;
+          ev.viewableId = detail.viewableId || ev.viewableRef;
+          ev._enriched = true;
+          render();
+        }
+      } catch (e) {
+        // leave placeholders
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, events.length) }, worker));
+}
+
+function render() {
+  const body = $('eventsBody');
+  body.innerHTML = '';
+  if (!events.length) {
+    $('eventsTable').style.display = 'none';
+    $('emptyState').style.display = 'block';
+    return;
+  }
+  $('eventsTable').style.display = '';
+  $('emptyState').style.display = 'none';
+  events.sort((a, b) => (a.archived - b.archived) || ((b.startTime || 0) - (a.startTime || 0)));
+  for (const ev of events) {
+    const tr = document.createElement('tr');
+    const title = ev.title || ev.viewableRef || '(no title)';
+    const stream = ev.streamUrl || '—';
+    tr.innerHTML = `
+      <td><strong>${escapeHtml(title)}</strong></td>
+      <td><span class="id">${escapeHtml(ev.id)}</span></td>
+      <td>${fmtTime(ev.startTime)}</td>
+      <td class="mono">${escapeHtml(stream)}</td>
+      <td>${statusBadge(ev)}</td>
+      <td><span class="badge external">external</span></td>
+      <td>
+        <button class="btn secondary small" data-edit="${escapeHtml(ev.id)}">Edit</button>
+      </td>
+    `;
+    body.appendChild(tr);
+  }
+  body.querySelectorAll('[data-edit]').forEach((b) => {
+    b.addEventListener('click', () => openEdit(b.getAttribute('data-edit')));
+  });
+}
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function openCreate() {
+  $('modalTitle').textContent = 'New external live event';
+  $('fId').value = '';
+  $('idField').style.display = 'none';
+  $('fTitle').value = '';
+  $('fStart').value = '';
+  $('fUrl').value = '';
+  $('fSignEnabled').checked = false;
+  $('signFields').style.display = 'none';
+  $('fToken').value = '';
+  $('fExpiry').value = '7200';
+  $('archiveBtn').style.display = 'none';
+  $('submitBtn').textContent = 'Create';
+  $('submitBtn').dataset.mode = 'create';
+  $('modal').classList.add('show');
+}
+
+function openEdit(id) {
+  const ev = events.find((e) => e.id === id);
+  if (!ev) return;
+  $('modalTitle').textContent = 'Edit external live event';
+  $('fId').value = ev.id;
+  $('idField').style.display = 'block';
+  $('fTitle').value = ev.title || '';
+  $('fStart').value = ev.startTime ? toLocalDatetimeInput(ev.startTime) : '';
+  $('fUrl').value = ev.streamUrl || '';
+  const hasSign = ev.urlSigning && ev.urlSigning.signingToken;
+  $('fSignEnabled').checked = !!hasSign;
+  $('signFields').style.display = hasSign ? 'grid' : 'none';
+  $('fToken').value = hasSign ? ev.urlSigning.signingToken : '';
+  $('fExpiry').value = hasSign && ev.urlSigning.expirySeconds ? ev.urlSigning.expirySeconds : '7200';
+  $('archiveBtn').style.display = ev.archived ? 'none' : '';
+  $('submitBtn').textContent = 'Save';
+  $('submitBtn').dataset.mode = 'edit';
+  $('modal').classList.add('show');
+}
+
+function closeModal() { $('modal').classList.remove('show'); }
+
+function environmentFromUrl(url) {
+  if (/devel|tvoli-devel/.test(url)) return 'devel';
+  if (/test|tvoli\.com/.test(url)) return 'test';
+  if (/prod|magine\.com/.test(url)) return 'prod';
+  return 'devel';
+}
+function buildPayloadFromForm() {
+  const start = $('fStart').value;
+  if (!$('fTitle').value.trim()) throw new Error('Title is required');
+  if (!start) throw new Error('Start time is required');
+  if (!$('fUrl').value.trim()) throw new Error('Stream URL is required');
+  const payload = {
+    environment: environmentFromUrl(cfg.url),
+    title: $('fTitle').value.trim(),
+    startTime: fromDatetimeInput(start),
+    streamUrl: $('fUrl').value.trim(),
+  };
+  if ($('fSignEnabled').checked) {
+    if (!$('fToken').value.trim()) throw new Error('Signing token is required when signing is enabled');
+    payload.urlSigning = {
+      urlSignMethod: 'cdn77',
+      signingToken: $('fToken').value.trim(),
+      expirySeconds: parseInt($('fExpiry').value || '7200', 10),
+    };
+  }
+  return payload;
+}
+
+async function submit() {
+  showError('');
+  let payload;
+  try { payload = buildPayloadFromForm(); }
+  catch (e) { showError(e.message); return; }
+  const mode = $('submitBtn').dataset.mode;
+  $('submitBtn').disabled = true;
+  try {
+    if (mode === 'create') {
+      const created = await api('POST', '/events', payload);
+      toast('Created', 'ok');
+      closeModal();
+      await loadEvents();
+    } else {
+      const id = $('fId').value;
+      await api('PUT', '/events/' + encodeURIComponent(id), payload);
+      toast('Saved', 'ok');
+      closeModal();
+      await loadEvents();
+    }
+  } catch (e) {
+    showError('Save failed: ' + e.message);
+  } finally {
+    $('submitBtn').disabled = false;
+  }
+}
+
+async function archiveCurrent() {
+  const id = $('fId').value;
+  if (!id) return;
+  if (!confirm('Archive this live event? It will be marked deleted in the backend.')) return;
+  $('archiveBtn').disabled = true;
+  try {
+    await api('DELETE', '/events/' + encodeURIComponent(id) + '?partner=' + encodeURIComponent(cfg.partner));
+    toast('Archived', 'ok');
+    closeModal();
+    await loadEvents();
+  } catch (e) {
+    showError('Archive failed: ' + e.message);
+  } finally {
+    $('archiveBtn').disabled = false;
+  }
+}
+
+$('saveCfgBtn').addEventListener('click', () => {
+  cfg.url = $('cfgUrl').value.trim();
+  cfg.key = $('cfgKey').value.trim();
+  cfg.partner = $('cfgPartner').value.trim();
+  localStorage.setItem('ele_url', cfg.url);
+  localStorage.setItem('ele_key', cfg.key);
+  localStorage.setItem('ele_partner', cfg.partner);
+  syncConfigInputs();
+  toast('Configuration saved', 'ok');
+  loadEvents();
+});
+$('refreshBtn').addEventListener('click', loadEvents);
+$('newBtn').addEventListener('click', openCreate);
+$('cancelBtn').addEventListener('click', closeModal);
+$('submitBtn').addEventListener('click', submit);
+$('archiveBtn').addEventListener('click', archiveCurrent);
+$('fSignEnabled').addEventListener('change', (e) => {
+  $('signFields').style.display = e.target.checked ? 'grid' : 'none';
+});
+$('toggleTokenBtn').addEventListener('click', () => {
+  const t = $('fToken');
+  if (t.type === 'text') { t.type = 'password'; $('toggleTokenBtn').textContent = 'Show'; }
+  else { t.type = 'text'; $('toggleTokenBtn').textContent = 'Hide'; }
+});
+$('modal').addEventListener('click', (e) => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeModal(); });
+
+syncConfigInputs();
+maybeOpenConfig();
+loadEvents();
+</script>
+</body>
+</html>
