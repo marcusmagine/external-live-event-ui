@@ -529,6 +529,21 @@ const cfg = {
   consolePartner: localStorage.getItem('ele_console_partner') || '',
 };
 
+// One-time migration: early preset shipped the wrong console slug
+// (magine-pro-demo). The correct slug for API partner "magine" is "magine".
+// Upgrade any stale stored value so existing users don't have to re-click.
+(function migrateConsoleConfig() {
+  const v = localStorage.getItem('ele_console_v');
+  if (v === '2') return;
+  if (cfg.consolePartner === 'magine-pro-demo' || !cfg.consolePartner) {
+    cfg.consoleUrl = PRESETS.devel.consoleUrl;
+    cfg.consolePartner = PRESETS.devel.consolePartner;
+    localStorage.setItem('ele_console_url', cfg.consoleUrl);
+    localStorage.setItem('ele_console_partner', cfg.consolePartner);
+  }
+  localStorage.setItem('ele_console_v', '2');
+})();
+
 function syncConfigInputs() {
   $('cfgUrl').value = cfg.url;
   $('cfgKey').value = cfg.key;
