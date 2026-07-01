@@ -396,6 +396,11 @@
   <div class="card" style="margin-bottom:20px; padding:18px;">
     <details class="config" id="configDetails" style="padding:0; border:none; margin:0;">
       <summary>API Configuration</summary>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:14px; flex-wrap:wrap;">
+        <span class="hint" style="margin:0;">Preset:</span>
+        <button class="btn secondary small" id="presetDevelBtn" type="button">devel (playground)</button>
+        <span class="hint" style="margin:0;">— fills the URL &amp; partner for the devel playground. Paste the API key (SSM <code>/config/external-live-event-api/devel/ApiKey</code>) and Save.</span>
+      </div>
       <div class="config-grid">
         <div>
           <label>Function URL</label>
@@ -490,6 +495,17 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
+
+// devel playground preset. The Function URL is public (auth is via X-Api-Key);
+// the API key is NOT bundled here — it lives in SSM and is pasted once, then
+// persisted in localStorage. Add more presets here as environments are wired up.
+const PRESETS = {
+  devel: {
+    url: 'https://eeh6vb5kqxwdkxttlkia5ip5di0rqtvv.lambda-url.eu-west-1.on.aws/',
+    partner: 'magine',
+  },
+};
+
 const cfg = {
   url: localStorage.getItem('ele_url') || '',
   key: localStorage.getItem('ele_key') || '',
@@ -770,6 +786,14 @@ $('saveCfgBtn').addEventListener('click', () => {
   syncConfigInputs();
   toast('Configuration saved', 'ok');
   loadEvents();
+});
+$('presetDevelBtn').addEventListener('click', () => {
+  const p = PRESETS.devel;
+  $('cfgUrl').value = p.url;
+  $('cfgPartner').value = p.partner;
+  $('configDetails').open = true;
+  $('cfgKey').focus();
+  toast('Preset loaded — paste the devel API key and Save', 'ok');
 });
 $('refreshBtn').addEventListener('click', loadEvents);
 $('newBtn').addEventListener('click', openCreate);

@@ -34,7 +34,11 @@ Then open <http://localhost:8000/>.
 
 ## Configure
 
-On first load, open **API Configuration** and enter:
+On first load, open **API Configuration**. The quickest path for the devel
+playground is the **devel (playground)** preset button, which fills the Function
+URL and partner ID (`magine`). You then paste the API key and Save.
+
+Or enter values manually:
 
 | Field | Value |
 |-------|-------|
@@ -43,7 +47,9 @@ On first load, open **API Configuration** and enter:
 | Partner ID | e.g. `magine` |
 
 Values are stored in `localStorage` on your machine only. They are not committed
-to this repo and are sent only to the configured API.
+to this repo and are sent only to the configured API. The preset ships only the
+(non-secret) devel Function URL and partner — the API key is never bundled in
+the repo.
 
 ## Environments
 
