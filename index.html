@@ -163,6 +163,7 @@
     font-size: 13px;
   }
   .breadcrumb a { color: var(--text); font-weight: 600; text-decoration: none; }
+  .breadcrumb a.disabled { color: var(--neutral-400); pointer-events: none; }
   .breadcrumb .sep { margin: 0 8px; color: var(--border-strong); }
 
   .page-head {
@@ -234,6 +235,8 @@
   .btn.danger:hover { background: var(--danger-hover); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .btn.small { padding: 6px 12px; font-size: 12px; }
+  .link { color: var(--btn-bg); font-weight: 600; font-size: 12px; text-decoration: none; margin-right: 8px; }
+  .link:hover { color: var(--btn-hover); }
 
   table {
     width: 100%;
@@ -378,7 +381,7 @@
     </div>
 
     <div class="breadcrumb">
-      <a href="#">Console</a><span class="sep">/</span><a href="#">Content</a><span class="sep">/</span>Live events
+      <a href="#" id="consoleLink">Console</a><span class="sep">/</span><a href="#" id="contentLink">Content</a><span class="sep">/</span>Live events
     </div>
 
     <div class="page-head">
@@ -503,6 +506,11 @@ const PRESETS = {
   devel: {
     url: 'https://eeh6vb5kqxwdkxttlkia5ip5di0rqtvv.lambda-url.eu-west-1.on.aws/',
     partner: 'magine',
+    // Leyra CMS console (devel). Used for the breadcrumb link and per-row
+    // "Open in console" deep links. consolePartner is the console's partner
+    // slug, which differs from the API partner id (magine vs magine-pro-demo).
+    consoleUrl: 'https://console.eu-west-1.devel.tvoli-devel.com',
+    consolePartner: 'magine-pro-demo',
   },
 };
 
@@ -510,6 +518,8 @@ const cfg = {
   url: localStorage.getItem('ele_url') || '',
   key: localStorage.getItem('ele_key') || '',
   partner: localStorage.getItem('ele_partner') || '',
+  consoleUrl: localStorage.getItem('ele_console_url') || '',
+  consolePartner: localStorage.getItem('ele_console_partner') || '',
 };
 
 function syncConfigInputs() {
@@ -519,6 +529,30 @@ function syncConfigInputs() {
   $('envLabel').textContent = cfg.url ? deriveEnvLabel(cfg.url) : 'Not Configured';
   $('partnerLabel').textContent = cfg.partner ? cfg.partner : 'Select Partner';
   $('avatar').textContent = (cfg.partner ? cfg.partner.slice(0, 2) : '?').toUpperCase();
+  syncConsoleLinks();
+}
+function consoleBase() {
+  if (!cfg.consoleUrl) return '';
+  return cfg.consoleUrl.replace(/\/$/, '') + '/' + encodeURIComponent(cfg.consolePartner);
+}
+function consoleAssetUrl(id) {
+  return consoleBase() ? consoleBase() + '/content/assets/' + encodeURIComponent(id) : '';
+}
+function syncConsoleLinks() {
+  const base = consoleBase();
+  const consoleLink = $('consoleLink');
+  const contentLink = $('contentLink');
+  if (base) {
+    consoleLink.href = base;
+    contentLink.href = base + '/content/assets';
+    consoleLink.classList.remove('disabled');
+    contentLink.classList.remove('disabled');
+  } else {
+    consoleLink.href = '#';
+    contentLink.href = '#';
+    consoleLink.classList.add('disabled');
+    contentLink.classList.add('disabled');
+  }
 }
 function deriveEnvLabel(url) {
   if (/devel/.test(url) || /tvoli-devel/.test(url)) return 'Environment: devel';
@@ -643,6 +677,10 @@ function render() {
     const tr = document.createElement('tr');
     const title = ev.title || ev.viewableRef || '(no title)';
     const stream = ev.streamUrl || '—';
+    const consoleHref = consoleAssetUrl(ev.id);
+    const openInConsole = consoleHref
+      ? `<a class="link small" href="${escapeHtml(consoleHref)}" target="_blank" rel="noopener noreferrer" title="Open asset in Leyra console">Open</a>`
+      : '';
     tr.innerHTML = `
       <td><strong>${escapeHtml(title)}</strong></td>
       <td><span class="id">${escapeHtml(ev.id)}</span></td>
@@ -650,7 +688,8 @@ function render() {
       <td class="mono">${escapeHtml(stream)}</td>
       <td>${statusBadge(ev)}</td>
       <td><span class="badge external">external</span></td>
-      <td>
+      <td style="white-space:nowrap;">
+        ${openInConsole}
         <button class="btn secondary small" data-edit="${escapeHtml(ev.id)}">Edit</button>
       </td>
     `;
@@ -791,6 +830,11 @@ $('presetDevelBtn').addEventListener('click', () => {
   const p = PRESETS.devel;
   $('cfgUrl').value = p.url;
   $('cfgPartner').value = p.partner;
+  cfg.consoleUrl = p.consoleUrl;
+  cfg.consolePartner = p.consolePartner;
+  localStorage.setItem('ele_console_url', cfg.consoleUrl);
+  localStorage.setItem('ele_console_partner', cfg.consolePartner);
+  syncConsoleLinks();
   $('configDetails').open = true;
   $('cfgKey').focus();
   toast('Preset loaded — paste the devel API key and Save', 'ok');
