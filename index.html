@@ -514,10 +514,10 @@ const PRESETS = {
     partner: 'magine',
     apiKey: '832bc1c0-755c-11f1-bc2b-026bd9051347',
     // Leyra CMS console (devel). Used for the breadcrumb link and per-row
-    // "Open in console" deep links. consolePartner is the console's partner
-    // slug, which differs from the API partner id (magine vs magine-pro-demo).
+    // "Open in console" deep links. For API partner id "magine" the console
+    // slug is also "magine".
     consoleUrl: 'https://console.eu-west-1.devel.tvoli-devel.com',
-    consolePartner: 'magine-pro-demo',
+    consolePartner: 'magine',
   },
 };
 
@@ -543,7 +543,7 @@ function consoleBase() {
   return cfg.consoleUrl.replace(/\/$/, '') + '/' + encodeURIComponent(cfg.consolePartner);
 }
 function consoleAssetUrl(id) {
-  return consoleBase() ? consoleBase() + '/content/assets/' + encodeURIComponent(id) : '';
+  return consoleBase() ? consoleBase() + '/content/assets/edit/' + encodeURIComponent(id) + '#playables-media' : '';
 }
 function syncConsoleLinks() {
   const base = consoleBase();
